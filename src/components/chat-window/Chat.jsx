@@ -3,7 +3,7 @@ import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../../AuthContext';
 import { db } from '../../firebase';
 import { sendMessage, addReaction, uploadImage, sendMessageWithImage } from '../../firestore';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import UrlPreview from './UrlPreview'; // Adjust the path based on your file structure
 
 const Chat = ({ setActiveChatId }) => {
@@ -12,8 +12,9 @@ const Chat = ({ setActiveChatId }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [replyTo, setReplyTo] = useState(null);
-  const [image, setImage] = useState(null); // State for the selected image
+  const [image, setImage] = useState(null);
   const [loadingMessages, setLoadingMessages] = useState(true);
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true); // State to track if we should auto-scroll
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -29,33 +30,38 @@ const Chat = ({ setActiveChatId }) => {
       }));
       setMessages(messages);
       setLoadingMessages(false);
+
+      if (shouldScrollToBottom) {
+        scrollToBottom();
+      }
     });
 
     return () => {
       setActiveChatId(null);
       unsubscribe();
     };
-  }, [chatId, setActiveChatId]);
+  }, [chatId, setActiveChatId, shouldScrollToBottom]);
 
-  useEffect(() => {
+  const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'end' });
     }
-  }, [messages]);
+  };
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === '' && !image) return;
 
     if (image) {
-      const imageUrl = await uploadImage(image); // Upload the image and get the URL
+      const imageUrl = await uploadImage(image);
       await sendMessageWithImage(chatId, currentUser.uid, newMessage, imageUrl, replyTo);
-      setImage(null); // Clear the image after sending
+      setImage(null);
     } else {
       await sendMessage(chatId, currentUser.uid, newMessage, replyTo);
     }
 
     setNewMessage('');
     setReplyTo(null);
+    setShouldScrollToBottom(true); // Scroll to bottom when sending a new message
   };
 
   const handleKeyDown = (e) => {
@@ -70,6 +76,7 @@ const Chat = ({ setActiveChatId }) => {
   };
 
   const handleAddReaction = async (messageId, emoji) => {
+    setShouldScrollToBottom(false); // Prevent auto-scroll on reaction
     await addReaction(chatId, messageId, emoji, currentUser.uid);
   };
 
@@ -79,7 +86,7 @@ const Chat = ({ setActiveChatId }) => {
 
   const handleImageChange = (e) => {
     if (e.target.files[0]) {
-      setImage(e.target.files[0]); // Store the selected image
+      setImage(e.target.files[0]);
     }
   };
 
@@ -87,6 +94,12 @@ const Chat = ({ setActiveChatId }) => {
 
   return (
     <div className="chat-container">
+      <div className="chat-header">
+        <ul>
+          <li><Link to="/start-private-chat">Start Private Chat</Link></li>
+          <li><Link to="/start-group-chat">Start Group Chat</Link></li>
+        </ul>
+      </div>
       <div className="messages">
         {loadingMessages ? <p>Loading messages...</p> : (
           <>
@@ -142,7 +155,7 @@ const Chat = ({ setActiveChatId }) => {
         <input
           type="file"
           accept="image/*"
-          onChange={handleImageChange} // Handle image selection
+          onChange={handleImageChange}
         />
         <button onClick={handleSendMessage}>Send</button>
       </div>

@@ -72,12 +72,6 @@ const Sidebar = ({ activeChatId }) => {
         ))}
       </ul>
 
-      <h2>Start a New Chat</h2>
-      <ul>
-        <li><Link to="/start-private-chat">Start Private Chat</Link></li>
-        <li><Link to="/start-group-chat">Start Group Chat</Link></li>
-      </ul>
-
       <h2>Users</h2>
       <ul>
         {users.map((user) => (

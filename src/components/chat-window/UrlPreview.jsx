@@ -14,7 +14,7 @@ const UrlPreview = ({ url }) => {
           const meta = await fetchUrlMetadata(url);
           setMetadata(meta);
         } catch (err) {
-          console.error('Error fetching metadata:', err);
+          console.error(err.response.data.error.message);
           setError('Failed to load URL preview');
         } finally {
           setLoading(false);
@@ -29,9 +29,9 @@ const UrlPreview = ({ url }) => {
 
   return (
     <div className="url-preview">
-      {metadata?.hybridGraph?.image && <img src={metadata.hybridGraph.image} alt="Preview" />}
-      <h4>{metadata?.hybridGraph?.title || 'No title available'}</h4>
-      <p>{metadata?.hybridGraph?.description || 'No description available'}</p>
+      {metadata?.openGraph?.image && <img src={metadata.openGraph.image} alt="Preview" />}
+      {metadata?.openGraph?.title && <h4>{metadata.openGraph.title}</h4>}
+      {metadata?.openGraph?.description && <p>{metadata.openGraph.description}</p>}
       <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
     </div>
   );
