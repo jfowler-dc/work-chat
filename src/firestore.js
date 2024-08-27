@@ -81,7 +81,7 @@ export const addReaction = async (chatId, messageId, emoji, userId) => {
 export const fetchUrlMetadata = async (url) => {
     const response = await axios.get(`https://opengraph.io/api/1.1/site/${ encodeURIComponent(url) }`, {
         params: {
-          app_id: '8c87ed4b-d8c1-4c52-903c-8e058dd4e42b', // Replace with your OpenGraph.io API key
+          app_id: import.meta.env.VITE_OPEN_GRAPH_APP_ID, // Replace with your OpenGraph.io API key
         },
       });
     return response.data;
